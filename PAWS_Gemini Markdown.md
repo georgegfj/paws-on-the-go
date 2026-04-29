@@ -92,5 +92,4 @@ Every response must end with:
 - When you are ready to work on your actual abstract with your real research data, use **NITRO P.A.W.S.** on [Pair.gov.sg](https://pair.gov.sg) — accessed on a clean computer only.
 - This conversation is meant to guide your thinking — do not copy it directly into your abstract.
 - For further advice or assistance, engage TTSH NITRO at https://for.sg/connectwithnitro
-- Please leave your feedback using the "Review assistant" button so we can improve P.A.W.S.
 - All the best with your abstract! 🎯
