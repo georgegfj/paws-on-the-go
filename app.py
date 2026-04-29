@@ -5,6 +5,7 @@ Streamlit chatbot powered by Gemini + NumPy RAG + Google Sheets logging
 
 import os
 import uuid
+import time
 import pathlib
 import numpy as np
 from datetime import datetime, timezone
@@ -19,7 +20,7 @@ from google.oauth2 import service_account
 
 KB_FILE            = pathlib.Path("knowledge_base.npz")
 EMBED_MODEL        = "models/gemini-embedding-001"
-GEN_MODEL          = "gemini-2.5-flash"
+GEN_MODEL          = "gemini-2.0-flash"
 SYSTEM_PROMPT_FILE = pathlib.Path("PAWS_Gemini Markdown.md")
 TOP_K              = 5
 SHEET_NAME         = "PAWS Conversations"
@@ -174,17 +175,29 @@ if user_input := st.chat_input("Tell me about your research idea..."):
         placeholder = st.empty()
         full_reply  = ""
 
-        for chunk in gemini_client.models.generate_content_stream(
-            model=GEN_MODEL,
-            config=types.GenerateContentConfig(
-                system_instruction=system_prompt,
-                temperature=0.7,
-            ),
-            contents=contents,
-        ):
-            if chunk.text:
-                full_reply += chunk.text
-                placeholder.markdown(full_reply + "▌")
+        for attempt in range(3):
+            try:
+                full_reply = ""
+                for chunk in gemini_client.models.generate_content_stream(
+                    model=GEN_MODEL,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_prompt,
+                        temperature=0.7,
+                    ),
+                    contents=contents,
+                ):
+                    if chunk.text:
+                        full_reply += chunk.text
+                        placeholder.markdown(full_reply + "▌")
+                break
+            except Exception as e:
+                if attempt < 2 and "503" in str(e):
+                    placeholder.markdown("_Model busy, retrying…_")
+                    time.sleep(3 * (attempt + 1))
+                else:
+                    placeholder.markdown(f"⚠️ {e}")
+                    full_reply = ""
+                    break
 
         placeholder.markdown(full_reply)
 
