@@ -3,3 +3,4 @@
 *.rtf
 __pycache__/
 .DS_Store
+README.md
