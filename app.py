@@ -105,16 +105,16 @@ def retrieve_context(gemini_client, query: str) -> str:
 # ── Streamlit UI ──────────────────────────────────────────────────────────────
 
 st.set_page_config(
-    page_title="NITRO P.A.W.S. On the Go",
+    page_title="NITRO P.A.W.S.-Lite",
     page_icon="🐾",
     layout="centered",
 )
 
-st.title("🐾 NITRO P.A.W.S. On the Go")
+st.title("🐾 NITRO P.A.W.S.-Lite")
 st.caption("Personal Abstract Witty adviSor-Lite · Powered by TTSH NITRO")
 st.info(
-    "Have an idea for your writing but nowhere near a clean computer? Turn to **NITRO P.A.W.S. On The Go!** "
-    "Try out your idea with us here, then continue once ready on **NITRO P.A.W.S.**, "
+    "Have an idea for your writing but nowhere near a clean computer? Turn to **NITRO P.A.W.S.-Lite**, "
+    "optimised for mobile usage! Try out your idea with us here, then continue once ready on **NITRO P.A.W.S.**, "
     "accessible through [pair.gov.sg](https://pair.gov.sg) on a clean computer!",
     icon="💡",
 )
