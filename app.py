@@ -20,7 +20,8 @@ from google.oauth2 import service_account
 
 KB_FILE            = pathlib.Path("knowledge_base.npz")
 EMBED_MODEL        = "models/gemini-embedding-001"
-GEN_MODEL          = "gemini-2.0-flash"
+GEN_MODEL          = "gemini-2.5-flash"
+FALLBACK_MODEL     = "gemma-3-27b-it"
 SYSTEM_PROMPT_FILE = pathlib.Path("PAWS_Gemini Markdown.md")
 TOP_K              = 5
 SHEET_NAME         = "PAWS Conversations"
@@ -177,10 +178,13 @@ if user_input := st.chat_input("Tell me about your research idea..."):
         last_error  = ""
 
         for attempt in range(3):
+            model = FALLBACK_MODEL if attempt == 2 else GEN_MODEL
             try:
                 full_reply = ""
+                if attempt == 2:
+                    placeholder.markdown("_Switching to backup model…_")
                 for chunk in gemini_client.models.generate_content_stream(
-                    model=GEN_MODEL,
+                    model=model,
                     config=types.GenerateContentConfig(
                         system_instruction=system_prompt,
                         temperature=0.7,
