@@ -1,15 +1,15 @@
 """
 NITRO P.A.W.S. - Personal Abstract Witty adviSor-Lite
-Streamlit chatbot powered by Gemini + ChromaDB RAG + Firestore logging
+Streamlit chatbot powered by Gemini + NumPy RAG + Google Sheets logging
 """
 
 import os
 import uuid
 import pathlib
+import numpy as np
 from datetime import datetime, timezone
 
 import gspread
-import chromadb
 import streamlit as st
 from google import genai
 from google.genai import types
@@ -17,13 +17,12 @@ from google.oauth2 import service_account
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
-CHROMA_DIR         = pathlib.Path("chroma_db")
-COLLECTION         = "paws_knowledge"
+KB_FILE            = pathlib.Path("knowledge_base.npz")
 EMBED_MODEL        = "models/gemini-embedding-001"
 GEN_MODEL          = "gemini-2.5-flash"
 SYSTEM_PROMPT_FILE = pathlib.Path("PAWS_Gemini Markdown.md")
 TOP_K              = 5
-SHEET_NAME         = "PAWS Conversations"   # must match the Google Sheet title exactly
+SHEET_NAME         = "PAWS Conversations"
 
 # ── Initialisation ────────────────────────────────────────────────────────────
 
@@ -33,10 +32,16 @@ def load_clients():
     if not api_key:
         st.error("GEMINI_API_KEY not set.")
         st.stop()
-    gemini = genai.Client(api_key=api_key)
-    chroma = chromadb.PersistentClient(path=str(CHROMA_DIR))
-    col    = chroma.get_collection(COLLECTION)
-    return gemini, col
+    return genai.Client(api_key=api_key)
+
+@st.cache_resource
+def load_knowledge_base():
+    data = np.load(KB_FILE, allow_pickle=True)
+    embeddings = data["embeddings"].astype(np.float32)
+    # Pre-normalise rows for fast cosine similarity via dot product
+    norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
+    embeddings = embeddings / np.where(norms == 0, 1, norms)
+    return embeddings, data["documents"].tolist(), data["sources"].tolist()
 
 @st.cache_resource
 def load_sheet():
@@ -48,9 +53,8 @@ def load_sheet():
             scopes=["https://spreadsheets.google.com/feeds",
                     "https://www.googleapis.com/auth/drive"],
         )
-        gc      = gspread.authorize(creds)
-        sheet   = gc.open(SHEET_NAME).sheet1
-        return sheet
+        gc    = gspread.authorize(creds)
+        return gc.open(SHEET_NAME).sheet1
     except Exception:
         return None
 
@@ -58,10 +62,9 @@ def load_sheet():
 def load_system_prompt():
     return SYSTEM_PROMPT_FILE.read_text(encoding="utf-8")
 
-# ── Firestore logging ─────────────────────────────────────────────────────────
+# ── Google Sheets logging ─────────────────────────────────────────────────────
 
 def log_turn(sheet, session_id: str, user_msg: str, paws_reply: str):
-    """Appends one conversation turn to Google Sheets. Fails silently."""
     if sheet is None:
         return
     try:
@@ -77,18 +80,24 @@ def log_turn(sheet, session_id: str, user_msg: str, paws_reply: str):
 
 # ── RAG retrieval ─────────────────────────────────────────────────────────────
 
-def retrieve_context(gemini_client, collection, query: str) -> str:
-    embedding = gemini_client.models.embed_content(
-        model=EMBED_MODEL,
-        contents=query,
-    ).embeddings[0].values
+def retrieve_context(gemini_client, query: str) -> str:
+    emb_matrix, documents, sources = load_knowledge_base()
 
-    results = collection.query(query_embeddings=[embedding], n_results=TOP_K)
-    chunks  = results["documents"][0]
-    sources = [m["source"] for m in results["metadatas"][0]]
+    query_emb = np.array(
+        gemini_client.models.embed_content(
+            model=EMBED_MODEL,
+            contents=query,
+        ).embeddings[0].values,
+        dtype=np.float32,
+    )
+    norm = np.linalg.norm(query_emb)
+    query_emb = query_emb / (norm if norm else 1)
+
+    similarities = emb_matrix @ query_emb
+    top_k_idx   = np.argsort(similarities)[-TOP_K:][::-1]
 
     return "\n\n---\n\n".join(
-        f"[Source: {src}]\n{chunk}" for chunk, src in zip(chunks, sources)
+        f"[Source: {sources[i]}]\n{documents[i]}" for i in top_k_idx
     )
 
 # ── Streamlit UI ──────────────────────────────────────────────────────────────
@@ -109,19 +118,16 @@ st.info(
 )
 st.divider()
 
-gemini_client, collection = load_clients()
+gemini_client = load_clients()
 sheet         = load_sheet()
 system_prompt = load_system_prompt()
 
-# Assign a unique session ID per browser session
 if "session_id" not in st.session_state:
     st.session_state.session_id = str(uuid.uuid4())
 
-# Initialise chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Show welcome message on first load
 if not st.session_state.messages:
     with st.chat_message("assistant"):
         welcome = (
@@ -134,20 +140,17 @@ if not st.session_state.messages:
         )
         st.markdown(welcome)
 
-# Render chat history
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# Chat input
 if user_input := st.chat_input("Tell me about your research idea..."):
 
     st.session_state.messages.append({"role": "user", "content": user_input})
     with st.chat_message("user"):
         st.markdown(user_input)
 
-    # Retrieve relevant context
-    context = retrieve_context(gemini_client, collection, user_input)
+    context = retrieve_context(gemini_client, user_input)
 
     augmented_input = (
         f"Reference context retrieved from academic literature and example abstracts:\n"
@@ -155,7 +158,6 @@ if user_input := st.chat_input("Tell me about your research idea..."):
         f"User message:\n{user_input}"
     )
 
-    # Build conversation history
     contents = []
     for msg in st.session_state.messages[:-1]:
         role = "user" if msg["role"] == "user" else "model"
@@ -168,7 +170,6 @@ if user_input := st.chat_input("Tell me about your research idea..."):
         parts=[types.Part.from_text(text=augmented_input)],
     ))
 
-    # Stream response
     with st.chat_message("assistant"):
         placeholder = st.empty()
         full_reply  = ""
@@ -188,6 +189,4 @@ if user_input := st.chat_input("Tell me about your research idea..."):
         placeholder.markdown(full_reply)
 
     st.session_state.messages.append({"role": "assistant", "content": full_reply})
-
-    # Log to Firestore
     log_turn(sheet, st.session_state.session_id, user_input, full_reply)

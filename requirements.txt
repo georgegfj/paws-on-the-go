@@ -2,6 +2,4 @@ streamlit>=1.35.0
 google-genai>=1.0.0
 gspread>=6.0.0
 google-auth>=2.14.0
-chromadb>=0.5.0
-pymupdf>=1.24.0
-python-docx>=1.1.0
+numpy>=1.24.0
