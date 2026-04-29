@@ -174,6 +174,7 @@ if user_input := st.chat_input("Tell me about your research idea..."):
     with st.chat_message("assistant"):
         placeholder = st.empty()
         full_reply  = ""
+        last_error  = ""
 
         for attempt in range(3):
             try:
@@ -189,17 +190,22 @@ if user_input := st.chat_input("Tell me about your research idea..."):
                     if chunk.text:
                         full_reply += chunk.text
                         placeholder.markdown(full_reply + "▌")
+                last_error = ""
                 break
             except Exception as e:
-                if attempt < 2 and "503" in str(e):
-                    placeholder.markdown("_Model busy, retrying…_")
-                    time.sleep(3 * (attempt + 1))
-                else:
-                    placeholder.markdown(f"⚠️ {e}")
-                    full_reply = ""
-                    break
+                last_error = str(e)
+                if attempt < 2:
+                    placeholder.markdown(f"_Model busy, retrying… (attempt {attempt + 2}/3)_")
+                    time.sleep(4)
 
-        placeholder.markdown(full_reply)
+        if last_error:
+            placeholder.markdown(
+                f"⚠️ The model is temporarily unavailable. Please wait a moment and try again.\n\n"
+                f"<details><summary>Error detail</summary>{last_error}</details>",
+                unsafe_allow_html=True,
+            )
+        else:
+            placeholder.markdown(full_reply)
 
     st.session_state.messages.append({"role": "assistant", "content": full_reply})
     log_turn(sheet, st.session_state.session_id, user_input, full_reply)
