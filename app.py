@@ -20,7 +20,7 @@ from google.oauth2 import service_account
 
 KB_FILE            = pathlib.Path("knowledge_base.npz")
 EMBED_MODEL        = "models/gemini-embedding-001"
-GEN_MODEL          = "gemini-2.5-flash"
+GEN_MODEL          = "gemini-3.5-flash"
 FALLBACK_MODEL     = "gemma-3-27b-it"
 SYSTEM_PROMPT_FILE = pathlib.Path("PAWS_Gemini Markdown.md")
 TOP_K              = 5
