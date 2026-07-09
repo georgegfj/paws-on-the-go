@@ -105,18 +105,18 @@ def retrieve_context(gemini_client, query: str) -> str:
 # ── Streamlit UI ──────────────────────────────────────────────────────────────
 
 st.set_page_config(
-    page_title="NITRO P.A.W.S.-Lite",
-    page_icon="🐾",
+    page_title="NITRO FLIGHT",
+    page_icon="✈️",
     layout="centered",
 )
 
-st.title("🐾 NITRO P.A.W.S.-Lite")
-st.caption("Personal Abstract Witty adviSor-Lite · Powered by TTSH NITRO")
+st.title("✈️ NITRO FLIGHT")
+st.caption("Portable Project Advisor · Powered by TTSH NITRO")
 st.info(
-    "Have an idea for your writing but nowhere near a clean computer? Turn to **NITRO P.A.W.S.-Lite**, "
-    "optimised for mobile usage! Try out your idea with us here, then continue once ready on **NITRO P.A.W.S.**, "
-    "accessible through [pair.gov.sg](https://pair.gov.sg) on a clean computer!",
-    icon="💡",
+    "Got a project idea on the go? **NITRO FLIGHT** helps you develop and evaluate it anywhere. "
+    "Once you're ready to write it up, continue with **NITRO P.A.W.S.** on "
+    "[pair.gov.sg](https://pair.gov.sg) — on a clean computer.",
+    icon="✈️",
 )
 st.divider()
 
@@ -133,12 +133,11 @@ if "messages" not in st.session_state:
 if not st.session_state.messages:
     with st.chat_message("assistant"):
         welcome = (
-            "Hello! I'm **NITRO P.A.W.S.** — your Personal Abstract Witty adviSor-Lite, "
-            "built by TTSH NITRO to help researchers like you turn ideas into strong abstracts. "
-            "I'm not here to judge a finished product — I'm here to have a conversation and work through what you need together.\n\n"
+            "Hello! I'm **NITRO FLIGHT** — your portable project advisor built by TTSH NITRO. "
+            "I'm here to help you develop and evaluate your healthcare project ideas, wherever you are.\n\n"
             "> Please keep everything you share **deidentified and unclassified**. "
             "This conversation may be captured to improve the product.\n\n"
-            "So — what are you working on? 🐾"
+            "So — what's the idea you're working on? ✈️"
         )
         st.markdown(welcome)
 

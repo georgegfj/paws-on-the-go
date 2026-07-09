@@ -149,11 +149,11 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "messages":   [],
     }
     welcome = (
-        "Hello\\! I'm *NITRO P\\.A\\.W\\.S\\.-Lite* — your Personal Abstract Witty adviSor\\-Lite, "
-        "built by TTSH NITRO to help researchers like you turn ideas into strong abstracts\\.\n\n"
+        "Hello\\! I'm *NITRO FLIGHT* — your portable project advisor built by TTSH NITRO\\. "
+        "I'm here to help you develop and evaluate your healthcare project ideas, wherever you are\\.\n\n"
         "_Please keep everything you share_ *deidentified and unclassified*\\. "
         "_This conversation may be captured to improve the product\\._\n\n"
-        "So — what are you working on? 🐾"
+        "So — what's the idea you're working on? ✈️"
     )
     await update.message.reply_text(welcome, parse_mode="MarkdownV2")
 
@@ -164,7 +164,7 @@ async def cmd_reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "messages":   [],
     }
     await update.message.reply_text(
-        "Conversation cleared\\. What would you like to work on? 🐾",
+        "Conversation cleared\\. What would you like to work on? ✈️",
         parse_mode="MarkdownV2",
     )
 
