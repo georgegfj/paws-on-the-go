@@ -17,14 +17,14 @@ from google import genai       # embeddings
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
-DOCS_DIR      = pathlib.Path("Training AI Abstract Guide")
+DOCS_DIR      = pathlib.Path("Knowledge Base")
 CHROMA_DIR    = pathlib.Path("chroma_db")
 CHUNK_SIZE    = 500     # target words per chunk
 CHUNK_OVERLAP = 50      # words of overlap between chunks
 EMBED_MODEL   = "models/gemini-embedding-001"
 COLLECTION    = "paws_knowledge"
 SKIP_FILES    = {
-    "SHBC Abstract Digital Natives vs Immigrants.docx",  # image-based, no extractable text
+    "Knowledge Base Inventory.md",  # index file, not content
 }
 
 API_KEY = os.environ.get("GEMINI_API_KEY", "")
@@ -48,6 +48,8 @@ def extract(path: pathlib.Path) -> str:
         return extract_pdf(path)
     if path.suffix.lower() == ".docx":
         return extract_docx(path)
+    if path.suffix.lower() == ".md":
+        return path.read_text(encoding="utf-8")
     return ""
 
 # ── Chunking ──────────────────────────────────────────────────────────────────
@@ -91,7 +93,7 @@ def main():
     # Collect all supported files
     files = sorted(
         p for p in DOCS_DIR.iterdir()
-        if p.suffix.lower() in {".pdf", ".docx"}
+        if p.suffix.lower() in {".pdf", ".docx", ".md"}
         and not p.name.startswith("~")
         and p.name not in SKIP_FILES
     )
