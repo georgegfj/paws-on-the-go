@@ -1,5 +1,5 @@
 """
-NITRO P.A.W.S. - Personal Abstract Witty adviSor-Lite
+NITRO FLIGHT — Portable Project Ideation & Evaluation Advisor
 Streamlit chatbot powered by Gemini + NumPy RAG + Google Sheets logging
 """
 
@@ -145,7 +145,7 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-if user_input := st.chat_input("Tell me about your research idea..."):
+if user_input := st.chat_input("Tell me about your project idea..."):
 
     st.session_state.messages.append({"role": "user", "content": user_input})
     with st.chat_message("user"):
@@ -154,7 +154,7 @@ if user_input := st.chat_input("Tell me about your research idea..."):
     context = retrieve_context(gemini_client, user_input)
 
     augmented_input = (
-        f"Reference context retrieved from academic literature and example abstracts:\n"
+        f"Reference context retrieved from the NITRO FLIGHT knowledge base:\n"
         f"<context>\n{context}\n</context>\n\n"
         f"User message:\n{user_input}"
     )
